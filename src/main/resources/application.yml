@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: file-manager-api
+
+file-manager:
+  base-path: ${BASE_PATH:/opt/static_file_manager/}
