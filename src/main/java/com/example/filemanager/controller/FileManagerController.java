@@ -1,13 +1,14 @@
 package com.example.filemanager.controller;
 
-import com.example.filemanager.model.ApiMessageResponse;
-import com.example.filemanager.model.FileContentResponse;
-import com.example.filemanager.model.FileMetadataResponse;
-import com.example.filemanager.model.FileRequest;
-import com.example.filemanager.service.FileManagerService;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,7 +21,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.example.filemanager.model.ApiMessageResponse;
+import com.example.filemanager.model.FileContentResponse;
+import com.example.filemanager.model.FileMetadataResponse;
+import com.example.filemanager.model.FileRequest;
+import com.example.filemanager.service.FileManagerService;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 
 @Validated
 @RestController
@@ -71,6 +79,26 @@ public class FileManagerController {
             @PathVariable String subdirectory,
             @RequestParam(name = "file_name") @NotBlank String fileName
     ) {
+    	System.out.println("subdirectory: "+subdirectory+" file_name: "+fileName);
         return ResponseEntity.ok(fileManagerService.getFileContent(subdirectory, fileName));
     }
+    
+    @GetMapping("/download/{subdirectory}")
+    public ResponseEntity<Resource> downloadFile(
+            @PathVariable String subdirectory,
+            @RequestParam(name = "file_name") @NotBlank String fileName
+    ) throws IOException {
+    	Path path = fileManagerService.getFilePath(subdirectory, fileName);
+        Resource resource = new UrlResource(path.toUri());
+
+        if (!resource.exists() || !resource.isReadable()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+            .body(resource);
+    }
+    
 }

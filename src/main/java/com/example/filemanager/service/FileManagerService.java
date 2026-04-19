@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 @Service
 public class FileManagerService {
 
-    private static final Set<String> ALLOWED_SUBDIRECTORIES = Set.of("dataset", "credential");
+    private static final Set<String> ALLOWED_SUBDIRECTORIES = Set.of("dataset", "credential", "permission", "query");
 
     private final FileStorageProperties fileStorageProperties;
     private Path baseDirectory;
@@ -91,6 +91,11 @@ public class FileManagerService {
         }
     }
 
+    public Path getFilePath(String subdirectory, String fileName) {
+        Path targetFile = resolveTargetFile(subdirectory, fileName);
+        return targetFile;
+    }
+    
     public FileContentResponse getFileContent(String subdirectory, String fileName) {
         Path targetFile = resolveTargetFile(subdirectory, fileName);
         if (!Files.exists(targetFile)) {
